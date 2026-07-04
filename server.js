@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
 import dotenv from "dotenv";
+
 import { WebSocketServer } from "ws";
 
 dotenv.config();
@@ -30,6 +31,10 @@ wsServer.on("connection", (websocket) => {
 
   websocket.on("message", (data) => {
     console.log(`Message received. ${data.toString()}`);
+
+    wsServer.clients.forEach((client) => {
+      client.send(data.toString());
+    });
   });
 });
 

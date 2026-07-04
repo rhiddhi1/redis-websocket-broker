@@ -7,5 +7,36 @@
   </head>
   <body>
     <h1>WebSocket Server</h1>
+    <div>
+      <input
+        type="text"
+        placeholder="Enter your message here"
+        id="message-input"
+      />
+      <button id="message-send-button">Send</button>
+      <ul id="message-container"></ul>
+    </div>
+    <script>
+      const messageInput = document.getElementById("message-input");
+      const messageSendButton = document.getElementById("message-send-button");
+      const messageContainer = document.getElementById("message-container");
+
+      const { port } = window.location;
+      const connection = new WebSocket(`ws://localhost:${port}`);
+
+      connection.onopen = () => {
+        connection.onmessage = (message) => {
+          const rawData = message.data;
+          const parsedData = JSON.parse(rawData);
+
+          messageContainer.innerText = parsedData.message;
+        };
+        messageSendButton.addEventListener("click", (event) => {
+          const value = messageInput.value;
+          connection.send(JSON.stringify({ message: value }));
+          messageInput.value = "";
+        });
+      };
+    </script>
   </body>
 </html>
