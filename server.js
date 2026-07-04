@@ -4,10 +4,12 @@ import path from "node:path";
 import dotenv from "dotenv";
 
 import { WebSocketServer } from "ws";
+import { redisPublish, redisSubscribe } from "./connection.js";
 
 dotenv.config();
 
 const port = process.env.PORT || 9000;
+const REDIS_CHANNEL = "ws-message";
 
 const httpServer = createServer(async (req, res) => {
   try {
@@ -26,15 +28,23 @@ const httpServer = createServer(async (req, res) => {
 
 const wsServer = new WebSocketServer({ server: httpServer });
 
-wsServer.on("connection", (websocket) => {
+redisSubscribe.subscribe(REDIS_CHANNEL);
+redisSubscribe.on("message", (channelName, message) => {
+  if (channelName === REDIS_CHANNEL) {
+    wsServer.clients.forEach((client) => {
+      client.send(message.toString());
+    });
+  }
+});
+
+wsServer.on("connection", async (websocket) => {
   console.log("WebSocket connection...");
 
-  websocket.on("message", (data) => {
+  websocket.on("message", async (data) => {
     console.log(`Message received. ${data.toString()}`);
 
-    wsServer.clients.forEach((client) => {
-      client.send(data.toString());
-    });
+    //RELAY THE MESSAGE TO THE BROKER...
+    await redisPublish.publish(REDIS_CHANNEL, data.toString());
   });
 });
 
