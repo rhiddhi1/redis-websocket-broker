@@ -29,7 +29,10 @@
           const rawData = message.data;
           const parsedData = JSON.parse(rawData);
 
-          messageContainer.innerText = parsedData.message;
+          const li = document.createElement("li");
+          li.innerText = parsedData.message;
+
+          messageContainer.append(li);
         };
         messageSendButton.addEventListener("click", (event) => {
           const value = messageInput.value;
